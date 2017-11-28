@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import division
 import rospy
 import tf
 import sys
@@ -6,13 +7,31 @@ from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest, GetPositionIKRe
 import geometry_msgs
 from moveit_commander import MoveGroupCommander
 from baxter_interface import gripper as robot_gripper
+import time
+
+#debugging
+############
+class CheckersGame(object):
+    """docstring for CheckersGame"""
+    def __init__(self, listener, upper_left_marker, lower_right_marker):
+        super(CheckersGame, self).__init__()
+        self.listener = listener
+        self.upper_left = get_artag_location(listener, upper_left_marker)
+        self.lower_right = get_artag_location(listener, lower_right_marker)
+
+    def location(self, i, j):
+        left, upper, z1 = self.upper_left
+        right, lower, z2 = self.lower_right
+        print left, right
+        return i * (left - right)/4.0 + right, j * (upper - lower)/4.0 + lower, (z1 + z2) /2
+############
 
 def move_checkers_piece(group, gripper, listener, checkers_number, end_location=None):
     # Get location of AR tag
-    x, y, z = get_artag_location("ar_marker_%d" % checkers_number)
+    x, y, z = get_artag_location(listener, "ar_marker_%d" % checkers_number)
 
     # Move to place above AR tag
-    move_group_to(group, x, y+0.02, z+0.1)
+    move_group_to(group, x - 0.02, y + 0.02, z + 0.1)
     raw_input("wait")
 
     # Move to AR tag and pick up with gripper
@@ -29,14 +48,15 @@ def move_checkers_piece(group, gripper, listener, checkers_number, end_location=
         end_x, end_y, end_z = end_location
     else:
         end_x, end_y, end_z = x, y, z
-    move_group_to(group, end_x, end_y, end_z + 0.1)
+    move_group_to(group, end_x, end_y + 0.02, end_z + 0.05)
     gripper.open()
 
-def get_artag_location(ar_marker):
+def get_artag_location(listener, ar_marker):
     trans = None
+    print 'Locating %s...' % ar_marker
     while not trans:
         try:
-            trans, rot = listener.lookupTransform("base", ar_marker, rospy.Time(0))
+            trans, rot = listener.lookupTransform("base", str(ar_marker), rospy.Time(0))
         except:
             continue
     return trans
@@ -75,7 +95,16 @@ def main():
             # Create and initialize the MoveGroup
             group = MoveGroupCommander("right_arm")
             init_move_group(group)
-            move_checkers_piece(group, right_gripper, listener, 0)
+            
+            # for dbugging
+            #################
+            # end_location = get_artag_location(listener, "ar_marker_20")
+            cg = CheckersGame(listener, "ar_marker_9", "ar_marker_20")
+            end_location = cg.location(1, 1)
+            print end_location
+            #################
+
+            move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
         sys.exit()

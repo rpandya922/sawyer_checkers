@@ -20,7 +20,7 @@ if __name__ == '__main__':
         trans = None
         while not trans:
             try:
-                trans, rot = listener.lookupTransform("base", "ar_marker_0", rospy.Time(0))
+                trans, rot = listener.lookupTransform("base", "ar_marker_2", rospy.Time(0))
             except:
                 continue
         # trans.extend(rot)
