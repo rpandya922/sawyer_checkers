@@ -36,7 +36,7 @@ def main():
     #         continue
 
     # Initialize game
-    choice = 0
+    choice = 1
     turn = 0
     B = checkers.CheckerBoard()
     current_player = B.active
