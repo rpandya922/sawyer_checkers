@@ -1,16 +1,17 @@
-"""
-    This module implements the game playing harness.
-"""
-# Andrew Edwards -- almostimplemented.com
-# =======================================
-# Harness for running a checkers match.
-#
-# Last updated: July 21, 2014
-
+#!/usr/bin/env python
 import checkers
 import agent
 import sys
-import ik
+sys.path.insert(0,'~/ros_workspaces/sawyer_checkers/src/planning/src')
+# import ik
+from ik import *
+# import rospy
+# import tf
+# from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest, GetPositionIKResponse
+# import geometry_msgs
+# from moveit_commander import MoveGroupCommander
+# from baxter_interface import gripper as robot_gripper
+# import time
 
 BLACK, WHITE = 0, 1
 
@@ -21,7 +22,8 @@ def main():
     right_gripper = robot_gripper.Gripper('right')
 
     # Sets the AI agent (please type "arthur")
-    agent_module = raw_input("Enter name of agent module: ");
+    # agent_module = raw_input("Enter name of agent module: ");
+    agent_module = "arthur"
     __import__(agent_module)
     agent_module = sys.modules[agent_module]
     cpu = agent.CheckersAgent(agent_module.move_function)
@@ -50,10 +52,10 @@ def main():
             group = MoveGroupCommander("right_arm")
             init_move_group(group)
             
-            upper_left = get_artag_location(listener, "ar_marker_9")
-            lower_right = get_artag_location(listener, "ar_marker_20")  
+            upper_left = get_artag_location(listener, "ar_marker_7")
+            lower_right = get_artag_location(listener, "ar_marker_5")  
 
-            cg = RobotCheckers(listener, upper_left, lower_right)
+            cg = RobotCheckers(upper_left, lower_right)
             
             # Game loop
             while not B.is_over():
@@ -93,7 +95,8 @@ def main():
                 else:
                     # Baxter's turn
                     start, end = B.make_move(cpu.make_move(B))
-                    robot_make_move(group, right_gripper, listener, start, end)
+                    print start, end
+                    cg.robot_make_move(group, right_gripper, listener, start, end)
 
                     if B.active == current_player:
                         print "Jumps must be taken."
