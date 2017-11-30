@@ -8,12 +8,13 @@ import geometry_msgs
 from moveit_commander import MoveGroupCommander
 from baxter_interface import gripper as robot_gripper
 import time
+import numpy as np
 
 
 class RobotCheckers():
     """docstring for CheckersGame"""
-    def __init__(self, upper_left_marker, lower_right_marker):
-        self.board_size = 8
+    def __init__(self, upper_left_marker, lower_right_marker, board_size=8):
+        self.board_size = board_size
         self.upper_left = upper_left_marker
         self.lower_right = lower_right_marker
         self.opponent_pieces = {}
@@ -37,7 +38,8 @@ class RobotCheckers():
 
     def detect_opponent_move(self, listener, wait_time=5):
         # Give users time to move piece
-        time.sleep(wait_time)
+        # time.sleep(wait_time)
+        raw_input("wait for human move")
 
         # Iterate through all the pieces and record new location
         move = -1
@@ -45,21 +47,25 @@ class RobotCheckers():
             if self.opponent_pieces[piece] != -1:
                 x, y, _ = get_artag_location(listener, "ar_marker_%s" % piece)
                 pos = self.location_to_position(x, y)
+                print piece, pos
 
                 # This piece has been moved
                 if self.opponent_pieces[piece] != pos:
                     move = (self.opponent_pieces[piece], pos)
                     self.opponent_pieces[piece] = pos
+        print "move", move
 
         return self.convert_to_bin(move)
 
     def location_to_position(self, x, y):
-        left, upper, _ = self.upper_left
-        right, lower, _ = self.lower_right
+        upper, left, _ = self.upper_left
+        lower, right, _ = self.lower_right
 
-        i = int(np.round((y - lower) * (self.board_size - 1) / (upper - lower)))
+        i = int(np.round((x - lower) * (self.board_size - 1) / (upper - lower)))
         j = int(np.round((y - right) * (self.board_size - 1) / (left - right)))
-        return i * 4 + j // 2 + 1
+
+        print "coordinates", i, j
+        return (i * 4) + (j // 2) + 1
 
     def convert_to_bin(self, move):
         assert move != -1
@@ -94,20 +100,6 @@ class RobotCheckers():
         move_group_to(group, temp_x, temp_y, temp_z)
         move_group_to(group, end_x, end_y, end_z + 0.1)
         gripper.open()
-
-class CheckersGame(object):
-    """docstring for CheckersGame"""
-    def __init__(self, listener, upper_left_marker, lower_right_marker):
-        super(CheckersGame, self).__init__()
-        self.listener = listener
-        self.upper_left = get_artag_location(listener, upper_left_marker)
-        self.lower_right = get_artag_location(listener, lower_right_marker)
-
-    def location(self, i, j):
-        left, upper, z1 = self.upper_left
-        right, lower, z2 = self.lower_right
-        print left, right
-        return i * (left - right)/2.0 + right, j * (upper - lower)/2.0 + lower, (z1 + z2) /2
 
 
 def move_checkers_piece(group, gripper, listener, checkers_number, end_location=None):
@@ -216,15 +208,19 @@ def main():
             # for dbugging
             #################
             # end_location = get_artag_location(listener, "ar_marker_20")
-            cg = CheckersGame(listener, "ar_marker_9", "ar_marker_20")
-            end_location = cg.location(1, 1)
-            print end_location
+            upper_left = get_artag_location(listener, "ar_marker_23")
+            lower_right = get_artag_location(listener, "ar_marker_22")  
+            cg = RobotCheckers(upper_left, lower_right)
+            # end_location = cg.location(1, 1)
+            # print end_location
             #################
+            move = cg.detect_opponent_move(listener)
+            print move
 
-            move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
+            # move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
-        sys.exit()
+    sys.exit()
 
 
 if __name__ == '__main__':

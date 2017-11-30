@@ -60,8 +60,8 @@ class CheckerBoard:
             bits turned on: the old position and the new position.
         """
         # 0b10001000000000
-        s = str(bin(move))
-        start, end = [pos for pos, char in enumerate(s[::-1]) if char == "1"]
+        print(move, bin(move))
+        start, end = [pos for pos, char in enumerate(bin(move)[::-1]) if char == "1"]
         taken_pieces = []
 
         active = self.active

@@ -52,8 +52,8 @@ def main():
             group = MoveGroupCommander("right_arm")
             init_move_group(group)
             
-            upper_left = get_artag_location(listener, "ar_marker_7")
-            lower_right = get_artag_location(listener, "ar_marker_5")  
+            upper_left = get_artag_location(listener, "ar_marker_23")
+            lower_right = get_artag_location(listener, "ar_marker_22")  
 
             cg = RobotCheckers(upper_left, lower_right)
             
@@ -63,28 +63,28 @@ def main():
 
                 # Human's turn
                 if turn % 2 == choice:
-                    # legal_moves = B.get_moves()
-                    # if B.jump:
-                    #     print "Make jump."
-                    #     print ""
-                    # else:
-                    #     print "Turn %i" % (turn + 1)
-                    #     print ""
-                    # for (i, move) in enumerate(get_move_strings(B)):
-                    #     print "Move " + str(i) + ": " + move
-                    # while True:
-                    #     move_idx = raw_input("Enter your move number: ")
-                    #     try:
-                    #         move_idx = int(move_idx)
-                    #     except ValueError:
-                    #         print "Please input a valid move number."
-                    #         continue
-                    #     if move_idx in range(len(legal_moves)):
-                    #         break
-                    #     else:
-                    #         print "Please input a valid move number."
-                    #         continue
-                    # B.make_move(legal_moves[move_idx])
+                #     legal_moves = B.get_moves()
+                #     if B.jump:
+                #         print "Make jump."
+                #         print ""
+                #     else:
+                #         print "Turn %i" % (turn + 1)
+                #         print ""
+                #     for (i, move) in enumerate(get_move_strings(B)):
+                #         print "Move " + str(i) + ": " + move
+                #     while True:
+                #         move_idx = raw_input("Enter your move number: ")
+                #         try:
+                #             move_idx = int(move_idx)
+                #         except ValueError:
+                #             print "Please input a valid move number."
+                #             continue
+                #         if move_idx in range(len(legal_moves)):
+                #             break
+                #         else:
+                #             print "Please input a valid move number."
+                #             continue
+                #     B.make_move(legal_moves[move_idx])
                     
                     human_move = cg.detect_opponent_move(listener)
                     B.make_move(human_move)
@@ -98,8 +98,8 @@ def main():
                 else:
                     # Baxter's turn
                     start, end, taken_pieces = B.make_move(cpu.make_move(B))
-                    print start, end
-                    cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
+                    # print start, end
+                    # cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
 
                     if B.active == current_player:
                         print "Jumps must be taken."
