@@ -16,6 +16,9 @@ class RobotCheckers():
         self.board_size = 8
         self.upper_left = upper_left_marker
         self.lower_right = lower_right_marker
+        self.opponent_pieces = {}
+        for i in range(12):
+            self.opponent_pieces[i] = i + 21
 
     def location(self, coordinate):
         i, j = coordinate
@@ -32,7 +35,48 @@ class RobotCheckers():
         i = ((pos - 1) % 4) * 2 + (1 - j % 2)
         return j, i
 
-    def robot_make_move(self, group, gripper, listener, start, end):
+    def detect_opponent_move(self, listener, wait_time=5):
+        # Give users time to move piece
+        time.sleep(wait_time)
+
+        # Iterate through all the pieces and record new location
+        move = -1
+        for piece in self.opponent_pieces:
+            if self.opponent_pieces[piece] != -1:
+                x, y, _ = get_artag_location(listener, "ar_marker_%s" % piece)
+                pos = self.location_to_position(x, y)
+
+                # This piece has been moved
+                if self.opponent_pieces[piece] != pos:
+                    move = (self.opponent_pieces[piece], pos)
+                    self.opponent_pieces[piece] = pos
+
+        return self.convert_to_bin(move)
+
+    def location_to_position(self, x, y):
+        left, upper, _ = self.upper_left
+        right, lower, _ = self.lower_right
+
+        i = int(np.round((y - lower) * (self.board_size - 1) / (upper - lower)))
+        j = int(np.round((y - right) * (self.board_size - 1) / (left - right)))
+        return i * 4 + j // 2 + 1
+
+    def convert_to_bin(self, move):
+        assert move != -1
+
+        pos1, pos2 = move
+        if pos1 > pos2:
+            s = "1" + "0"*(pos1 - pos2 - 1) + "1" + "0"*pos2
+        else:
+            s = "1" + "0"*(pos2 - pos1 - 1) + "1" + "0"*pos1
+        return int(s, 2)
+
+    def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
+        # Detect taken pieces
+        for piece in taken_pieces:
+            self.opponent_pieces[piece] = -1
+
+        # Calculate cartesian positions based on given position
         x, y, z = self.location(self.location_helper(start))
         end_x, end_y, end_z = self.location(self.location_helper(end))
 
