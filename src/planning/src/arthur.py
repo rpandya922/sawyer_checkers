@@ -347,14 +347,15 @@ def move_function(board, depth=5):
             return negamax(board, B, depth, -INFINITY, INFINITY, -1)
 
     return max(board.get_moves(), key=search)
-    #pairs = zip(zip(board.get_moves(), get_move_strings(board)),
-                #map(search, board.get_moves()))
+    pairs = zip(zip(board.get_moves(), get_move_strings(board)),
+                map(search, board.get_moves()))
     #print "Moves and ratings"
     #for pair in pairs:
         #print pair[0][1] + " with a rating of " + str(pair[1])
     #print ""
-    #best_pair = max(pairs, key=lambda x: x[1])
-    #return best_pair[0][0]
+    best_pair = max(pairs, key=lambda x: x[1])
+    # return best_pair[0][0]
+    return best_pair[0]
 
 def get_move_strings(board):
     rfj = board.right_forward_jumps()
@@ -373,13 +374,15 @@ def get_move_strings(board):
                     for (i, bit) in enumerate(bin(lbj)[::-1]) if bit == '1']
 
         if board.active == BLACK:
-            regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            return regular_moves + reverse_moves
+            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
+            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
+            # return regular_moves + reverse_moves
+            return rfj + lfj + rbj + lbj
         else:
-            reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            return reverse_moves + regular_moves
+            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
+            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
+            # return reverse_moves + regular_moves
+            return rfj + lfj + rbj + lbj
 
 
     rf = board.right_forward()
@@ -397,10 +400,12 @@ def get_move_strings(board):
                 for (i, bit) in enumerate(bin(lb)[::-1]) if bit == '1']
 
     if board.active == BLACK:
-        regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        return regular_moves + reverse_moves
+        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
+        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
+        # return regular_moves + reverse_moves
+        return rf + lf + rb + lb
     else:
-        regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        return reverse_moves + regular_moves
+        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
+        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
+        # return reverse_moves + regular_moves
+        return rf + lf + rb + lb
