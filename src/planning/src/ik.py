@@ -9,7 +9,9 @@ from moveit_commander import MoveGroupCommander
 from baxter_interface import gripper as robot_gripper
 import time
 import numpy as np
+import copy
 
+NEUTRAL_POS = [0.646, -0.115, -0.042]
 
 class RobotCheckers():
     """docstring for CheckersGame"""
@@ -53,6 +55,7 @@ class RobotCheckers():
                 if self.opponent_pieces[piece] != pos:
                     move = (self.opponent_pieces[piece], pos)
                     self.opponent_pieces[piece] = pos
+                    break
         print "move", move
 
         return self.convert_to_bin(move)
@@ -147,7 +150,7 @@ def init_move_group(group, position_tolerance=0.01,
     group.set_goal_orientation_tolerance(orientation_tolerance)
     group.set_max_velocity_scaling_factor(velocity_factor)
 
-def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
+def move_group_to_deprecated(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation.x = ox
     pose_target.orientation.y = oy
@@ -161,35 +164,48 @@ def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
     while not result:
         group.set_pose_target(pose_target)
         result = group.go()
-    # return result
 
-# def main():
-#     # Initiate node, listener, and gripper
-#     rospy.init_node("checkers")
-#     listener = tf.TransformListener()
-#     right_gripper = robot_gripper.Gripper('right')
+def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
+    waypoints = []
 
-#     while not rospy.is_shutdown():
-#         right_gripper.open()
+    # start with the current pose
+    waypoints.append(group.get_current_pose().pose)
 
-#         try:
-#             # Create and initialize the MoveGroup
-#             group = MoveGroupCommander("right_arm")
-#             init_move_group(group)
+    # first orient gripper and move forward (+x)
+    wpose = geometry_msgs.msg.Pose()
+    wpose.orientation.x = ox
+    wpose.orientation.y = oy
+    wpose.orientation.z = oz
+    wpose.orientation.w = ow
+    wpose.position.x = NEUTRAL_POS[0]
+    wpose.position.y = NEUTRAL_POS[1]
+    wpose.position.z = NEUTRAL_POS[2]
+    waypoints.append(copy.deepcopy(wpose))
 
-#             # Create checkers game
-#             upper_left = get_artag_location(listener, "ar_marker_9")
-#             lower_right = get_artag_location(listener, "ar_marker_20")            
-#             cg = CheckersGame(3, upper_left, lower_right)
+    # second move down
+    pose_target = geometry_msgs.msg.Pose()
+    pose_target.orientation.x = ox
+    pose_target.orientation.y = oy
+    pose_target.orientation.z = oz
+    pose_target.orientation.w = ow
+    pose_target.position.x = x 
+    pose_target.position.y = y
+    pose_target.position.z = z
+    waypoints.append(copy.deepcopy(pose_target))
 
-#             # Move to end location
-#             end_location = cg.location(1, 1)            
-#             move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
-
-#         except rospy.ServiceException, e:
-#             print "Service call failed: %s"%e
-        
-#         sys.exit()
+    ## We want the cartesian path to be interpolated at a resolution of 1 cm
+    ## which is why we will specify 0.01 as the eef_step in cartesian
+    ## translation.  We will specify the jump threshold as 0.0, effectively
+    ## disabling it.
+    (plan3, fraction) = group.compute_cartesian_path(
+                               waypoints,   # waypoints to follow
+                               0.01,        # eef_step
+                               0.0) # jump_threshold
+    group.set_pose_target(pose_target)
+    print plan3
+    print waypoints
+    rospy.sleep(10)
+    group.execute(plan3)
 
 def main():
     # Initiate node, listener, and gripper
@@ -204,23 +220,24 @@ def main():
             # Create and initialize the MoveGroup
             group = MoveGroupCommander("right_arm")
             init_move_group(group, position_tolerance=0.01)
-            
+            print group.get_end_effector_link()
             # for dbugging
             #################
             # end_location = get_artag_location(listener, "ar_marker_20")
-            upper_left = get_artag_location(listener, "ar_marker_23")
-            lower_right = get_artag_location(listener, "ar_marker_22")  
-            cg = RobotCheckers(upper_left, lower_right)
+            # upper_left = get_artag_location(listener, "ar_marker_23")
+            # lower_right = get_artag_location(listener, "ar_marker_22")  
+            # cg = RobotCheckers(upper_left, lower_right)
             # end_location = cg.location(1, 1)
             # print end_location
             #################
-            move = cg.detect_opponent_move(listener)
-            print move
+            # move = cg.detect_opponent_move(listener)
+            # print move
+            move_group_to(group, 0.609, -0.131, -0.157)
 
             # move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
-    sys.exit()
+        sys.exit()
 
 
 if __name__ == '__main__':
