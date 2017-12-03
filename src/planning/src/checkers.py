@@ -325,6 +325,8 @@ class CheckerBoard:
                 else:
                     state[i][j] = EMPTY
 
+        self.state = state
+
         board = [None] * 17
         for i in range(9):
             board[2*i] = ["+", " - "] + ["+", " - "]*7 + ["+", "\n"]

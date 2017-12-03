@@ -143,7 +143,10 @@ def main():
                     taken_pieces = B.make_move(move)
                     start, end = move_tuple
                     print start, end
-                    cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
+                    # cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
+
+                    cg.set_taken_pieces(B.state)
+                    cg.robot_make_move(group, right_gripper, listener, start, end)
 
                     if B.active == current_player:
                         print "Jumps must be taken."

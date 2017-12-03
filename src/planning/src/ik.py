@@ -95,13 +95,19 @@ class RobotCheckers():
             s = "1" + "0"*(pos2 - pos1 - 1) + "1" + "0"*pos1
         return int(s, 2)
 
-    def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
+    def set_taken_pieces(self, state):
+        for piece in self.opponent_pieces:
+            pos = self.opponent_pieces[piece]
+            if pos != -1 and state[(pos - 1) // 8][(pos - 1) % 8] == -1:
+                self.opponent_pieces[piece] = -1
+
+    def robot_make_move(self, group, gripper, listener, start, end):
         # Detect taken pieces
-        for pos in taken_pieces:
-            for piece in self.opponent_pieces:
-                if self.opponent_pieces[piece] == pos:
-                    self.opponent_pieces[piece] = -1
-                    print "piece it thinks is taken", piece
+        # for pos in taken_pieces:
+        #     for piece in self.opponent_pieces:
+        #         if self.opponent_pieces[piece] == pos:
+        #             self.opponent_pieces[piece] = -1
+        #             print "piece it thinks is taken", piece
 
         # Calculate cartesian positions based on given position
         x, y, z = self.location(self.location_helper(start))
