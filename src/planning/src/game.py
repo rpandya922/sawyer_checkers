@@ -12,6 +12,7 @@ from ik import *
 # from moveit_commander import MoveGroupCommander
 # from baxter_interface import gripper as robot_gripper
 # import time
+import arthur
 
 BLACK, WHITE = 0, 1
 
@@ -23,10 +24,10 @@ def main():
 
     # Sets the AI agent (please type "arthur")
     # agent_module = raw_input("Enter name of agent module: ");
-    agent_module = "arthur"
-    __import__(agent_module)
-    agent_module = sys.modules[agent_module]
-    cpu = agent.CheckersAgent(agent_module.move_function)
+    # agent_module = "arthur"
+    # __import__(agent_module)
+    # agent_module = sys.modules[agent_module]
+    cpu = agent.CheckersAgent(arthur.move_function)
 
     # while True:
     #     choice = raw_input("Enter 0 to go first and 1 to go second: ")
@@ -51,9 +52,22 @@ def main():
             # Create and initialize the MoveGroup
             group = MoveGroupCommander("right_arm")
             init_move_group(group)
+            obs_group = MoveGroupCommander("left_arm")
+            init_move_group(obs_group)
             
+            move_group_to(obs_group, UL_POS[0], UL_POS[1], UL_POS[2], 
+            UL_ORIENTATION[0], UL_ORIENTATION[1], UL_ORIENTATION[2], UL_ORIENTATION[3])
+            raw_input("wait")
             upper_left = get_artag_location(listener, "ar_marker_23")
-            lower_right = get_artag_location(listener, "ar_marker_22")  
+
+            move_group_to(obs_group, LR_POS[0], LR_POS[1], LR_POS[2], 
+            LR_ORIENTATION[0], LR_ORIENTATION[1], LR_ORIENTATION[2], LR_ORIENTATION[3])
+            raw_input("wait")
+            lower_right = get_artag_location(listener, "ar_marker_22")
+
+            raw_input("wait")
+            move_group_to(obs_group, OBS_POS[0], OBS_POS[1], OBS_POS[2], 
+            OBS_ORIENTATION[0], OBS_ORIENTATION[1], OBS_ORIENTATION[2], OBS_ORIENTATION[3])
 
             cg = RobotCheckers(upper_left, lower_right)
             
@@ -86,9 +100,36 @@ def main():
                 #             continue
                 #     B.make_move(legal_moves[move_idx])
                     moves = zip(B.get_moves(), get_move_strings(B))
-                    human_move = cg.detect_opponent_move(listener)
-                    human_move = [move for move, move_tuple in moves if move_tuple == human_move][0]
-                    B.make_move(human_move)
+                    human_move = cg.detect_opponent_move(listener, obs_group)
+                    # print human_move
+                    human_move = [move for (move, move_tuple) in moves if move_tuple == human_move]
+                    # print human_move
+                    if len(human_move) <= 0:
+                        legal_moves = B.get_moves()
+                        if B.jump:
+                            print "Make jump."
+                            print ""
+                        else:
+                            print "Turn %i" % (turn + 1)
+                            print ""
+                        for (i, move) in enumerate(get_move_strings(B)):
+                            print "Move " + str(i) + ": " + str(move)
+                        while True:
+                            move_idx = raw_input("Enter your move number: ")
+                            try:
+                                move_idx = int(move_idx)
+                            except ValueError:
+                                print "Please input a valid move number."
+                                continue
+                            if move_idx in range(len(legal_moves)):
+                                break
+                            else:
+                                print "Please input a valid move number."
+                                continue
+                        B.make_move(legal_moves[move_idx])
+                    else:
+                        B.make_move(human_move[0])
+
                     # If jumps remain, then the board will not update current player
                     if B.active == current_player:
                         print "Jumps must be taken."
@@ -100,9 +141,9 @@ def main():
                     # Baxter's turn
                     move, move_tuple = cpu.make_move(B)
                     taken_pieces = B.make_move(move)
-                    start, end = move
-                    # print start, end
-                    # cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
+                    start, end = move_tuple
+                    print start, end
+                    cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
 
                     if B.active == current_player:
                         print "Jumps must be taken."

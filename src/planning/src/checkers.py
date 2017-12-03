@@ -60,7 +60,6 @@ class CheckerBoard:
             bits turned on: the old position and the new position.
         """
         # 0b10001000000000
-        print(move, bin(move))
         # start, end = [pos for pos, char in enumerate(bin(move)[::-1]) if char == "1"]
         taken_pieces = []
 
@@ -69,7 +68,7 @@ class CheckerBoard:
         if move < 0:
             move *= -1
             taken_piece = int(1 << sum(i for (i, b) in enumerate(bin(move)[::-1]) if b == '1')/2)
-            taken_pieces = [pos - 1 for pos, char in enumerate(bin(taken_piece)[::-1]) if char == "1"]
+            taken_pieces = [pos for pos, char in enumerate(bin(taken_piece)[::-1]) if char == "1"]
             self.pieces[passive] ^= taken_piece
             if self.forward[passive] & taken_piece:
                 self.forward[passive] ^= taken_piece
@@ -99,6 +98,7 @@ class CheckerBoard:
         self.jump = 0
         self.active, self.passive = self.passive, self.active
         # return start, end, taken_pieces
+        print "position of pieces taken", taken_pieces
         return taken_pieces
 
     def peek_move(self, move):

@@ -11,8 +11,17 @@ import time
 import numpy as np
 import copy
 
-NEUTRAL_POS = [0.646, -0.115, -0.042]
-
+INTER_POS = [0.578, -0.613, 0.086]
+OBS_POS = [0.646, -0.089, 0.023]
+OBS_ORIENTATION = [0.998, -0.024, 0.026, 0.049]
+OBS_INTER = [0.761, 0.424, 0.036]
+OBS_INTER_OR = [0.976, 0.210, 0.058, 0.001]
+# OBS_POS = [0.7114290367050152, 0.03161122015026299, 0.06646284113328582]
+# OBS_ORIENTATION = [-0.6415845756845758, 0.7633987472725328, 0.01782142247017489, -0.07262218536721532]
+UL_POS = [0.884, 0.114, -0.050]
+UL_ORIENTATION = [0.997, -0.002, 0.077, 0.010]
+LR_POS = [0.438, -0.298, -0.035]
+LR_ORIENTATION = [0.951, -0.223, -0.183, 0.108]
 class RobotCheckers():
     """docstring for CheckersGame"""
     def __init__(self, upper_left_marker, lower_right_marker, board_size=8):
@@ -38,10 +47,13 @@ class RobotCheckers():
         i = ((pos - 1) % 4) * 2 + (1 - j % 2)
         return j, i
 
-    def detect_opponent_move(self, listener, wait_time=5):
+    def detect_opponent_move(self, listener, group, wait_time=5):
         # Give users time to move piece
         # time.sleep(wait_time)
+        move_group_to(group, OBS_POS[0], OBS_POS[1], OBS_POS[2], 
+            OBS_ORIENTATION[0], OBS_ORIENTATION[1], OBS_ORIENTATION[2], OBS_ORIENTATION[3])
         raw_input("wait for human move")
+
 
         # Iterate through all the pieces and record new location
         move = -1
@@ -49,15 +61,17 @@ class RobotCheckers():
             if self.opponent_pieces[piece] != -1:
                 x, y, _ = get_artag_location(listener, "ar_marker_%s" % piece)
                 pos = self.location_to_position(x, y)
-                print piece, pos
+                # print piece, pos
 
                 # This piece has been moved
                 if self.opponent_pieces[piece] != pos:
                     move = (self.opponent_pieces[piece], pos)
                     self.opponent_pieces[piece] = pos
-                    break
-        print "move", move
-
+                    # break
+                    print piece, move
+        # print "move", move
+        move_group_to(group, OBS_INTER[0], OBS_INTER[1], OBS_INTER[2], 
+            OBS_INTER_OR[0], OBS_INTER_OR[1], OBS_INTER_OR[2], OBS_INTER_OR[3])
         # return self.convert_to_bin(move)
         return move
 
@@ -83,14 +97,17 @@ class RobotCheckers():
 
     def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
         # Detect taken pieces
-        for piece in taken_pieces:
-            self.opponent_pieces[piece] = -1
+        for pos in taken_pieces:
+            for piece in self.opponent_pieces:
+                if self.opponent_pieces[piece] == pos:
+                    self.opponent_pieces[piece] = -1
+                    print "piece it thinks is taken", piece
 
         # Calculate cartesian positions based on given position
         x, y, z = self.location(self.location_helper(start))
         end_x, end_y, end_z = self.location(self.location_helper(end))
 
-        move_group_to(group, x, y, z + 0.1)
+        move_group_to(group, x - 0.01, y, z + 0.1)
         raw_input("wait")
 
         # Move to AR tag and pick up with gripper
@@ -102,8 +119,11 @@ class RobotCheckers():
 
         # Move up with AR tag and release gripper
         move_group_to(group, temp_x, temp_y, temp_z)
-        move_group_to(group, end_x, end_y, end_z + 0.1)
+        move_group_to(group, end_x - 0.01, end_y, end_z + 0.1)
         gripper.open()
+        time.sleep(1)
+
+        move_group_to(group, INTER_POS[0], INTER_POS[1], INTER_POS[2])
 
 
 def move_checkers_piece(group, gripper, listener, checkers_number, end_location=None):
@@ -144,14 +164,14 @@ def get_artag_location(listener, ar_marker):
     return trans
 
 def init_move_group(group, position_tolerance=0.01, 
-                    orientation_tolerance=0.1, velocity_factor=0.5):
+                    orientation_tolerance=0.06, velocity_factor=0.5):
     group.set_planner_id('RRTConnectkConfigDefault')
     group.set_start_state_to_current_state()
     group.set_goal_position_tolerance(position_tolerance)
     group.set_goal_orientation_tolerance(orientation_tolerance)
     group.set_max_velocity_scaling_factor(velocity_factor)
 
-def move_group_to_deprecated(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
+def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
     pose_target = geometry_msgs.msg.Pose()
     pose_target.orientation.x = ox
     pose_target.orientation.y = oy
@@ -166,7 +186,7 @@ def move_group_to_deprecated(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
         group.set_pose_target(pose_target)
         result = group.go()
 
-def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
+def move_group_to_deprecated(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
     waypoints = []
 
     # start with the current pose
@@ -205,7 +225,7 @@ def move_group_to(group, x, y, z, ox=0, oy=1, oz=0, ow=0):
     group.set_pose_target(pose_target)
     print plan3
     print waypoints
-    rospy.sleep(10)
+    # rospy.sleep(10)
     group.execute(plan3)
 
 def main():
@@ -233,13 +253,13 @@ def main():
             #################
             # move = cg.detect_opponent_move(listener)
             # print move
-            move_group_to(group, 0.609, -0.131, -0.157)
+            # move_group_to(group, 0.609, -0.131, -0.157)
+            move_group_to(group, 0.406, -0.140, -0.188)
 
             # move_checkers_piece(group, right_gripper, listener, 0, end_location=end_location)
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
         sys.exit()
-
 
 if __name__ == '__main__':
     main()

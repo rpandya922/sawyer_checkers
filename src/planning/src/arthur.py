@@ -346,7 +346,7 @@ def move_function(board, depth=5):
         else:
             return negamax(board, B, depth, -INFINITY, INFINITY, -1)
 
-    return max(board.get_moves(), key=search)
+    # return max(board.get_moves(), key=search)
     pairs = zip(zip(board.get_moves(), get_move_strings(board)),
                 map(search, board.get_moves()))
     #print "Moves and ratings"
@@ -355,6 +355,7 @@ def move_function(board, depth=5):
     #print ""
     best_pair = max(pairs, key=lambda x: x[1])
     # return best_pair[0][0]
+    print best_pair[0]
     return best_pair[0]
 
 def get_move_strings(board):
