@@ -61,7 +61,7 @@ class CheckerBoard:
         """
         # 0b10001000000000
         print(move, bin(move))
-        start, end = [pos for pos, char in enumerate(bin(move)[::-1]) if char == "1"]
+        # start, end = [pos for pos, char in enumerate(bin(move)[::-1]) if char == "1"]
         taken_pieces = []
 
         active = self.active
@@ -98,7 +98,8 @@ class CheckerBoard:
 
         self.jump = 0
         self.active, self.passive = self.passive, self.active
-        return start, end, taken_pieces
+        # return start, end, taken_pieces
+        return taken_pieces
 
     def peek_move(self, move):
         """

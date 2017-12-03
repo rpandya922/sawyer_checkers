@@ -85,8 +85,9 @@ def main():
                 #             print "Please input a valid move number."
                 #             continue
                 #     B.make_move(legal_moves[move_idx])
-                    
+                    moves = zip(B.get_moves(), get_move_strings(B))
                     human_move = cg.detect_opponent_move(listener)
+                    human_move = [move for move, move_tuple in moves if move_tuple == human_move][0]
                     B.make_move(human_move)
                     # If jumps remain, then the board will not update current player
                     if B.active == current_player:
@@ -97,7 +98,9 @@ def main():
                         turn += 1
                 else:
                     # Baxter's turn
-                    start, end, taken_pieces = B.make_move(cpu.make_move(B))
+                    move, move_tuple = cpu.make_move(B)
+                    taken_pieces = B.make_move(move)
+                    start, end = move
                     # print start, end
                     # cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
 
@@ -141,13 +144,15 @@ def get_move_strings(board):
                     for (i, bit) in enumerate(bin(lbj)[::-1]) if bit == '1']
 
         if board.active == BLACK:
-            regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            return regular_moves + reverse_moves
+            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
+            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
+            # return regular_moves + reverse_moves
+            return rfj + lfj + rbj + lbj
         else:
-            reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            return reverse_moves + regular_moves
+            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
+            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
+            # return reverse_moves + regular_moves
+            return rfj + lfj + rbj + lbj
 
 
     rf = board.right_forward()
@@ -165,13 +170,15 @@ def get_move_strings(board):
                 for (i, bit) in enumerate(bin(lb)[::-1]) if bit == '1']
 
     if board.active == BLACK:
-        regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        return regular_moves + reverse_moves
+        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
+        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
+        # return regular_moves + reverse_moves
+        return rf + lf + rb + lb
     else:
-        regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        return reverse_moves + regular_moves
+        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
+        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
+        # return reverse_moves + regular_moves
+        return rf + lf + rb + lb
 
 if __name__ == '__main__':
     try:

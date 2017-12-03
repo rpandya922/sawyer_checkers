@@ -58,7 +58,8 @@ class RobotCheckers():
                     break
         print "move", move
 
-        return self.convert_to_bin(move)
+        # return self.convert_to_bin(move)
+        return move
 
     def location_to_position(self, x, y):
         upper, left, _ = self.upper_left
