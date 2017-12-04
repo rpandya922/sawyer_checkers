@@ -100,20 +100,21 @@ class RobotCheckers():
             pos = self.opponent_pieces[piece]
             if pos != -1 and state[(pos - 1) // 8][(pos - 1) % 8] == -1:
                 self.opponent_pieces[piece] = -1
+                print "thinks taken piece", piece
 
-    def robot_make_move(self, group, gripper, listener, start, end):
+    def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
         # Detect taken pieces
-        # for pos in taken_pieces:
-        #     for piece in self.opponent_pieces:
-        #         if self.opponent_pieces[piece] == pos:
-        #             self.opponent_pieces[piece] = -1
-        #             print "piece it thinks is taken", piece
+        for pos in taken_pieces:
+            for piece in self.opponent_pieces:
+                if self.opponent_pieces[piece] == pos:
+                    self.opponent_pieces[piece] = -1
+                    print "piece it thinks is taken", piece
 
         # Calculate cartesian positions based on given position
         x, y, z = self.location(self.location_helper(start))
         end_x, end_y, end_z = self.location(self.location_helper(end))
 
-        move_group_to(group, x - 0.01, y, z + 0.1)
+        move_group_to(group, x, y - 0.01, z + 0.1)
         raw_input("wait")
 
         # Move to AR tag and pick up with gripper
@@ -125,7 +126,7 @@ class RobotCheckers():
 
         # Move up with AR tag and release gripper
         move_group_to(group, temp_x, temp_y, temp_z)
-        move_group_to(group, end_x - 0.01, end_y, end_z + 0.1)
+        move_group_to(group, end_x, end_y - 0.01, end_z + 0.1)
         gripper.open()
         time.sleep(1)
 

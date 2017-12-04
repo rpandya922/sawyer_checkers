@@ -98,7 +98,7 @@ class CheckerBoard:
         self.jump = 0
         self.active, self.passive = self.passive, self.active
         # return start, end, taken_pieces
-        print "position of pieces taken", taken_pieces
+        # print "position of pieces taken", taken_pieces
         return taken_pieces
 
     def peek_move(self, move):
