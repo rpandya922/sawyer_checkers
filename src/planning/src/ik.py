@@ -3,13 +3,15 @@ from __future__ import division
 import rospy
 import tf
 import sys
-from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest, GetPositionIKResponse
+# from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest, GetPositionIKResponse
 import geometry_msgs
 from moveit_commander import MoveGroupCommander
 from baxter_interface import gripper as robot_gripper
 import time
 import numpy as np
 import copy
+from planning.msg import CheckersMove
+from planning.msg import BoardCalibration
 
 INTER_POS = [0.578, -0.613, 0.086]
 OBS_POS = [0.646, -0.089, 0.023]
@@ -54,12 +56,12 @@ class RobotCheckers():
             OBS_ORIENTATION[0], OBS_ORIENTATION[1], OBS_ORIENTATION[2], OBS_ORIENTATION[3])
         raw_input("wait for human move")
 
-
         # Iterate through all the pieces and record new location
         move = -1
         for piece in self.opponent_pieces:
             if self.opponent_pieces[piece] != -1:
                 x, y, _ = get_artag_location(listener, "ar_marker_%s" % piece)
+                # x, y = (1, 1)
                 pos = self.location_to_position(x, y)
                 # print piece, pos
 
@@ -102,35 +104,35 @@ class RobotCheckers():
                 self.opponent_pieces[piece] = -1
                 print "thinks taken piece", piece
 
-    def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
-        # Detect taken pieces
-        for pos in taken_pieces:
-            for piece in self.opponent_pieces:
-                if self.opponent_pieces[piece] == pos:
-                    self.opponent_pieces[piece] = -1
-                    print "piece it thinks is taken", piece
+    # def robot_make_move(self, group, gripper, listener, start, end, taken_pieces):
+    #     # Detect taken pieces
+    #     for pos in taken_pieces:
+    #         for piece in self.opponent_pieces:
+    #             if self.opponent_pieces[piece] == pos:
+    #                 self.opponent_pieces[piece] = -1
+    #                 print "piece it thinks is taken", piece
 
-        # Calculate cartesian positions based on given position
-        x, y, z = self.location(self.location_helper(start))
-        end_x, end_y, end_z = self.location(self.location_helper(end))
+    #     # Calculate cartesian positions based on given position
+    #     x, y, z = self.location(self.location_helper(start))
+    #     end_x, end_y, end_z = self.location(self.location_helper(end))
 
-        move_group_to(group, x, y - 0.01, z + 0.1)
-        raw_input("wait")
+    #     move_group_to(group, x, y, z + 0.1)
+    #     raw_input("wait")
 
-        # Move to AR tag and pick up with gripper
-        (temp_x, temp_y, temp_z), _ = listener.lookupTransform("base", "right_gripper", 
-                                                                rospy.Time(0))
-        move_group_to(group, temp_x, temp_y, temp_z-0.1)
-        gripper.close()
-        time.sleep(1)
+    #     # Move to AR tag and pick up with gripper
+    #     (temp_x, temp_y, temp_z), _ = listener.lookupTransform("base", "right_gripper", 
+    #                                                             rospy.Time(0))
+    #     move_group_to(group, temp_x, temp_y, temp_z-0.1)
+    #     gripper.close()
+    #     time.sleep(1)
 
-        # Move up with AR tag and release gripper
-        move_group_to(group, temp_x, temp_y, temp_z)
-        move_group_to(group, end_x, end_y - 0.01, end_z + 0.1)
-        gripper.open()
-        time.sleep(1)
+    #     # Move up with AR tag and release gripper
+    #     move_group_to(group, temp_x, temp_y, temp_z)
+    #     move_group_to(group, end_x, end_y, end_z + 0.1)
+    #     gripper.open()
+    #     time.sleep(1)
 
-        move_group_to(group, INTER_POS[0], INTER_POS[1], INTER_POS[2])
+    #     move_group_to(group, INTER_POS[0], INTER_POS[1], INTER_POS[2])
 
 
 def move_checkers_piece(group, gripper, listener, checkers_number, end_location=None):

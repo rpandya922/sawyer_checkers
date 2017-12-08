@@ -3,40 +3,22 @@ import checkers
 import agent
 import sys
 sys.path.insert(0,'~/ros_workspaces/sawyer_checkers/src/planning/src')
-# import ik
 from ik import *
-# import rospy
-# import tf
-# from moveit_msgs.srv import GetPositionIK, GetPositionIKRequest, GetPositionIKResponse
-# import geometry_msgs
-# from moveit_commander import MoveGroupCommander
-# from baxter_interface import gripper as robot_gripper
-# import time
 import arthur
 
 BLACK, WHITE = 0, 1
 
 def main():
     # Initiate node, listener, and gripper
-    rospy.init_node("testing")
+    rospy.init_node("game")
     listener = tf.TransformListener()
     right_gripper = robot_gripper.Gripper('right')
 
-    # Sets the AI agent (please type "arthur")
-    # agent_module = raw_input("Enter name of agent module: ");
-    # agent_module = "arthur"
-    # __import__(agent_module)
-    # agent_module = sys.modules[agent_module]
+    # Publishers for human and robot moves
+    human_pub = rospy.Publisher('human_moves', CheckersMove, queue_size=10)
+    robot_pub = rospy.Publisher('robot_moves', CheckersMove, queue_size=10)
+    calibration_pub = rospy.Publisher('board_calibration', BoardCalibration, queue_size=10)
     cpu = agent.CheckersAgent(arthur.move_function)
-
-    # while True:
-    #     choice = raw_input("Enter 0 to go first and 1 to go second: ")
-    #     try:
-    #         choice = int(choice)
-    #         break
-    #     except ValueError:
-    #         print "Please input 0 or 1."
-    #         continue
 
     # Initialize game
     choice = 1
@@ -70,6 +52,9 @@ def main():
             OBS_ORIENTATION[0], OBS_ORIENTATION[1], OBS_ORIENTATION[2], OBS_ORIENTATION[3])
 
             cg = RobotCheckers(upper_left, lower_right)
+
+            calibration_pub.publish(upper_left[0], upper_left[1], upper_left[2], \
+                                    lower_right[0], lower_right[1], lower_right[2])
             
             # Game loop
             while not B.is_over():
@@ -77,32 +62,11 @@ def main():
 
                 # Human's turn
                 if turn % 2 == choice:
-                #     legal_moves = B.get_moves()
-                #     if B.jump:
-                #         print "Make jump."
-                #         print ""
-                #     else:
-                #         print "Turn %i" % (turn + 1)
-                #         print ""
-                #     for (i, move) in enumerate(get_move_strings(B)):
-                #         print "Move " + str(i) + ": " + move
-                #     while True:
-                #         move_idx = raw_input("Enter your move number: ")
-                #         try:
-                #             move_idx = int(move_idx)
-                #         except ValueError:
-                #             print "Please input a valid move number."
-                #             continue
-                #         if move_idx in range(len(legal_moves)):
-                #             break
-                #         else:
-                #             print "Please input a valid move number."
-                #             continue
-                #     B.make_move(legal_moves[move_idx])
                     moves = zip(B.get_moves(), get_move_strings(B))
                     human_move = cg.detect_opponent_move(listener, obs_group)
-                    # print human_move
                     human_move = [move for (move, move_tuple) in moves if move_tuple == human_move]
+                    if human_move != -1:
+                        human_pub.publish(human_move[0], human_move[1])
                     # print human_move
                     if len(human_move) <= 0:
                         legal_moves = B.get_moves()
@@ -143,10 +107,9 @@ def main():
                     taken_pieces = B.make_move(move)
                     start, end = move_tuple
                     print start, end
-                    cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
-
-                    # cg.set_taken_pieces(B.state)
-                    # cg.robot_make_move(group, right_gripper, listener, start, end)
+                    robot_pub.publish(start, end)
+                    cg.set_taken_pieces(B.state)
+                    # cg.robot_make_move(group, right_gripper, listener, start, end, taken_pieces)
 
                     if B.active == current_player:
                         print "Jumps must be taken."
@@ -188,14 +151,8 @@ def get_move_strings(board):
                     for (i, bit) in enumerate(bin(lbj)[::-1]) if bit == '1']
 
         if board.active == BLACK:
-            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            # return regular_moves + reverse_moves
             return rfj + lfj + rbj + lbj
         else:
-            # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rfj + lfj]
-            # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rbj + lbj]
-            # return reverse_moves + regular_moves
             return rfj + lfj + rbj + lbj
 
 
@@ -214,14 +171,8 @@ def get_move_strings(board):
                 for (i, bit) in enumerate(bin(lb)[::-1]) if bit == '1']
 
     if board.active == BLACK:
-        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        # return regular_moves + reverse_moves
         return rf + lf + rb + lb
     else:
-        # regular_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rb + lb]
-        # reverse_moves = ["%i to %i" % (orig, dest) for (orig, dest) in rf + lf]
-        # return reverse_moves + regular_moves
         return rf + lf + rb + lb
 
 if __name__ == '__main__':

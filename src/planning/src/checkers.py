@@ -1,21 +1,7 @@
-"""
-    This module defines the CheckerBoard class.
-"""
-# Andrew Edwards -- almostimplemented.com
-# =======================================
-# A simple and efficient checker board class.
-#
-# Created July 29, 2014
-
 ### CONSTANTS
 
 # Black moves "forward", white moves "backward"
 BLACK, WHITE = 0, 1
-
-# The IBM704 had 36-bit words. Arthur Samuel used the extra bits to
-# ensure that every normal move could be performed by flipping the
-# original bit and the bit either 4 or 5 bits away, in the cases of
-# moving right and left respectively.
 
 UNUSED_BITS = 0b100000000100000000100000000100000000
 

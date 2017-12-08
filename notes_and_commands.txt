@@ -1,0 +1,46 @@
+Running camera launch and AR tag tracking:
+export ROS_MASTER_URI=http://[name-of-robot].local:11311
+./baxter.sh asimov.local
+roslaunch ar_track_alvar webcam_track.launch
+
+Running Rviz:
+make sure ssh into baxter!
+rosrun rviz rviz
+
+rosrun tf tf_echo right_hand ar_marker_[marker-name]
+
+to list all cameras:
+after running `./baxter.sh asimov.local`, run `rosrun baxter_tools camera_control.py -l` -c to close, only have 2 cameras listed max, restart camera to fix frame location issue
+rosrun image_view image_view image:=/cameras/head_camera/image
+
+Running move_test.py:
+
+ssh into baxter! ./baxter
+roslaunch ar_track_alvar webcam_track.launch
+rosrun baxter_interface joint_trajectory_action_server.py 
+roslaunch baxter_moveit_config move_group.launch
+rosrun planning move_test.py
+
+Running moveit demo with rviz:
+ssh into baxter! ./baxter.sh asimov.local
+rosrun baxter_interface joint_trajectory_action_server.py 
+roslaunch baxter_moveit_config demo_baxter.launch left_electric_gripper:=true
+
+(0.5903991000155788, 0.04351949993438514, -0.20797959265687202)
+[0.654, 0.055, -0.181]
+
+Right gripper observation position:
+[0.561, -0.635, 0.043]
+
+Left gripper obs position:
+[0.7114290367050152, 0.03161122015026299, 0.06646284113328582] [-0.6415845756845758, 0.7633987472725328, 0.01782142247017489, -0.07262218536721532]
+
+Right gripper neutrual pos:
+[0.538, -0.119, -0.013]
+
+23 obs: [0.884, 0.114, -0.150]
+- Rotation: in Quaternion [0.997, -0.002, 0.077, 0.010]
+
+22 obs: [0.438, -0.298, -0.135]
+- Rotation: in Quaternion [0.951, -0.223, -0.183, 0.108]
+
